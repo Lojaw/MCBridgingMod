@@ -1,0 +1,40 @@
+{
+	"schemaVersion": 1,
+	"id": "bridging-mod",
+	"version": "${version}",
+	"name": "Bridging Mod",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Lojaw"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "MIT",
+	"icon": "assets/bridging-mod/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"de.lojaw.BridgingMod"
+		],
+		"client": [
+			"de.lojaw.BridgingModClient"
+		],
+		"fabric-datagen": [
+			"de.lojaw.BridgingModDataGenerator"
+		]
+	},
+	"mixins": [
+		"bridging-mod.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.15.3",
+		"minecraft": "~1.20.4",
+		"java": ">=17",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
