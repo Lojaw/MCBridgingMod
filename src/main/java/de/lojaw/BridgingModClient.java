@@ -1,6 +1,7 @@
 package de.lojaw;
 
 import de.lojaw.bridgingmethods.AndromedaBridgingHandler;
+import de.lojaw.jni.KeyboardInputHandler;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
@@ -19,6 +20,7 @@ public class BridgingModClient implements ClientModInitializer {
     private static boolean autoPlaceEnabled = false;
 
     public static boolean andromedaBridgingEnabled = true;
+    private static KeyboardInputHandler keyboardHandler;
 
 
     public enum MouseButtonType {
@@ -29,6 +31,7 @@ public class BridgingModClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         System.setProperty("java.awt.headless", "false");
+        keyboardHandler = KeyboardInputHandler.getInstance();
 
         ClientSendMessageEvents.ALLOW_CHAT.register((message) -> {
             String[] args = message.split(" ");
@@ -59,11 +62,6 @@ public class BridgingModClient implements ClientModInitializer {
 
                     case "andromeda":
                         andromedaBridgingEnabled = true;
-                        try {
-                            AndromedaBridgingHandler.executeAndromedaBridging(MinecraftClient.getInstance());
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
                         return false;
 
                     default:
@@ -82,7 +80,11 @@ public class BridgingModClient implements ClientModInitializer {
             }
         });
 
-        //ClientTickEvents.END_CLIENT_TICK.register(client -> {
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (keyboardHandler != null) {
+                keyboardHandler.updateOnTick();
+            }
+
             //if (autoPlaceEnabled) {
                 //autoPlaceBlocks(client);
             //}
@@ -94,7 +96,7 @@ public class BridgingModClient implements ClientModInitializer {
                 //}
                 //andromedaBridgingEnabled = false;
             //}
-        //});
+        });
     }
 
     private void simulateMouseClick(MouseButtonType mouseButtonType, int clicksPerSecond, int timeInSeconds) {

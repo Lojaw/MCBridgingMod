@@ -18,7 +18,7 @@ import static de.lojaw.BridgingModClient.simulateMouseClickWithRobot;
 public class AndromedaBridgingHandler {
     private static final int BRIDGING_DISTANCE = 5; // Abstand zwischen den zu platzierenden Blöcken
 
-    public static void executeAndromedaBridging(MinecraftClient client) throws InterruptedException {
+    public static void executeAndromedaBridging(MinecraftClient client, long milliSeconds) throws InterruptedException {
         initAndromedaBridging(client);
         //for (int i = 0; i < BRIDGING_DISTANCE; i++) {
             //placeBlockBelowPlayer(client);
