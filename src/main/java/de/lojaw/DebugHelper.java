@@ -21,7 +21,7 @@ public class DebugHelper {
 
         if(andromedaBridgingEnabled) {
             if (player.isOnGround()) {
-                player.jump();
+                //player.jump();
             }
 
             if (MinecraftClient.getInstance().options.forwardKey.isPressed()) {

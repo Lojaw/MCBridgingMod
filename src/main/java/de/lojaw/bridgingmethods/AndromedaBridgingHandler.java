@@ -2,66 +2,116 @@
 package de.lojaw.bridgingmethods;
 
 import de.lojaw.BridgingModClient;
+import de.lojaw.jni.KeyboardInputHandler;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import net.minecraft.entity.player.PlayerEntity;
 
-import net.minecraft.util.math.BlockPos;
+import java.awt.*;
+import java.awt.event.InputEvent;
 
-import static de.lojaw.BridgingModClient.simulateKeyPressWithRobot;
-import static de.lojaw.BridgingModClient.simulateMouseClickWithRobot;
+enum Direction {
+    NORTH, SOUTH, EAST, WEST; // Richtungen, zwischen denen gewechselt werden kann
+}
 
 public class AndromedaBridgingHandler {
-    private static final int BRIDGING_DISTANCE = 5; // Abstand zwischen den zu platzierenden Blöcken
+    private static final int TICKS_PER_SECOND = 20; // Minecraft läuft mit 20 Ticks pro Sekunde
+    private static int remainingTicks;
+    private static boolean isFacingChanged = false;
+    private static boolean isRightClickNeeded = false;
+    private static boolean toggleDirection = false;
+    private static boolean isSTastePressed = false;
+    private static int dTasteTickCounter = 0;
 
-    public static void executeAndromedaBridging(MinecraftClient client, long milliSeconds) throws InterruptedException {
-        initAndromedaBridging(client);
-        //for (int i = 0; i < BRIDGING_DISTANCE; i++) {
-            //placeBlockBelowPlayer(client);
-            //placeBlockAbovePlayer(client);
-        //}
+    private static boolean isDTastePressed = false;
+    private static int dTasteCycleCounter = 0;
+
+
+    public static void executeAndromedaBridging(MinecraftClient client, int durationInSeconds) {
+        BridgingModClient.andromedaBridgingEnabled = true;
+        remainingTicks = durationInSeconds * TICKS_PER_SECOND;
+
+        isFacingChanged = true;
+        isSTastePressed = true; // S-Taste wird gedrückt, sobald Andromeda-Bridging aktiviert wird
+        dTasteTickCounter = 0;
     }
 
-    private static void initAndromedaBridging(MinecraftClient client) throws InterruptedException {
-        ClientPlayerEntity player = client.player;
-        if (player != null) {
+    public static void update() {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        PlayerEntity player = mc.player;
 
-
-            // Richte den Spieler so aus, dass er nach unten auf den Block schaut
-            //player.setPitch(90.0F);
-            //player.setSprinting(true);
-            //simulateKeyPressWithRobot('w');
-
-            // Platzieren Sie einen Block unterhalb des Spielers, falls keiner vorhanden ist
-            //BlockPos blockBelow = player.getBlockPos().down();
-            //if (client.world.getBlockState(blockBelow).isAir()) {
-                //simulateMouseClickWithRobot(BridgingModClient.MouseButtonType.RIGHT_CLICK);
+        if (BridgingModClient.andromedaBridgingEnabled) {
+            //if (isRightClickNeeded) {
+                //performRightClick();
+                //isRightClickNeeded = false; // Rechtsklick wurde durchgeführt, also zurücksetzen
             //}
 
-            // Platziere einen Block überhalb des Spielers, falls keiner vorhanden ist
-            //BlockPos blockAbove = player.getBlockPos().up();
-            //if (client.world.getBlockState(blockAbove).isAir()) {
-                //simulateMouseClickWithRobot(BridgingModClient.MouseButtonType.RIGHT_CLICK);
+            //if (isFacingChanged) {
+                // Warten für 2 Ticks (100 Millisekunden) nach jedem Blickwinkelwechsel, bevor der Rechtsklick durchgeführt wird
+                //if (remainingTicks % (TICKS_PER_SECOND / 20) == 0) {
+                    //isRightClickNeeded = true; // Rechtsklick soll durchgeführt werden
+                    //isFacingChanged = false; // Blickwinkel wurde geändert, also zurücksetzen
+                //}
             //}
 
-            ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-            // Der Code, der nach 5 Sekunden ausgeführt werden soll
-            // Zum Beispiel das Verlassen der Methode oder das Ausführen weiterer Aktionen
-            // Schließen Sie den Executor nach der Ausführung
-            executor.schedule(executor::shutdown, 5, TimeUnit.SECONDS);
+            if (remainingTicks % 1 == 0) {
+                performRightClick();
+            }
 
+            if (remainingTicks % 1 == 0) { // Wechselt die Blickrichtung bei jedem Tick
+                if (toggleDirection) {
+                    player.setYaw(-142.6F);
+                    player.setPitch(79.3F);
+                } else {
+                    //player.setYaw(-146.5F);
+                    //player.setPitch(-62.3F);
+                }
+                toggleDirection = !toggleDirection; // Umschalten der Richtung
+            }
+
+                // S-Taste bei jedem Tick drücken
+                KeyboardInputHandler.getInstance().pressKey('S');
+
+                // D-Taste-Zyklus
+                if (dTasteCycleCounter < 20) { // 800 Millisekunden gedrückt halten
+                    if (!isDTastePressed) {
+                        KeyboardInputHandler.getInstance().pressKey('D');
+                        isDTastePressed = true;
+                    }
+                } else if (dTasteCycleCounter < 24) { // 400 Millisekunden loslassen
+                    if (isDTastePressed) {
+                        KeyboardInputHandler.getInstance().releaseKey('D');
+                        isDTastePressed = false;
+                    }
+                }
+
+                dTasteCycleCounter++;
+                if (dTasteCycleCounter >= 24) {
+                    dTasteCycleCounter = 0; // Zyklus zurücksetzen
+                }
+
+
+
+            remainingTicks--;
+            if (remainingTicks <= 0) {
+                KeyboardInputHandler.getInstance().releaseKey('S');
+                AndromedaBridgingHandler.isSTastePressed = false;
+                BridgingModClient.andromedaBridgingEnabled = false;
+            }
         }
     }
 
-    private static void placeBlockBelowPlayer(MinecraftClient client) {
-        simulateMouseClickWithRobot(BridgingModClient.MouseButtonType.RIGHT_CLICK);
+    private static void performRightClick() {
+        Robot robot;
+        try {
+            robot = new Robot();
+            robot.mousePress(InputEvent.BUTTON3_DOWN_MASK); // Führt Rechtsklick aus
+            robot.mouseRelease(InputEvent.BUTTON3_DOWN_MASK); // Lässt Rechtsklick los
+        } catch (AWTException e) {
+            e.printStackTrace();
+        }
     }
 
-    private static void placeBlockAbovePlayer(MinecraftClient client) {
-        simulateMouseClickWithRobot(BridgingModClient.MouseButtonType.RIGHT_CLICK);
-    }
 }
+
+// facing north (torwards negative z) (-142.6 / 79.3) und (torwards negative z)  (-146.5 / -62.3)

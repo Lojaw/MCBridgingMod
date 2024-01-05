@@ -5,7 +5,7 @@
 	"mixins": [
 		"ExampleMixin",
 		"PlayerEntityMixin",
-		"SpringMixin"
+		"SprintMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
