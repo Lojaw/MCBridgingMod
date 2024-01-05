@@ -17,23 +17,26 @@ enum Direction {
 public class AndromedaBridgingHandler {
     private static final int TICKS_PER_SECOND = 20; // Minecraft läuft mit 20 Ticks pro Sekunde
     private static int remainingTicks;
-    private static boolean isFacingChanged = false;
-    private static boolean isRightClickNeeded = false;
     private static boolean toggleDirection = false;
     private static boolean isSTastePressed = false;
-    private static int dTasteTickCounter = 0;
 
     private static boolean isDTastePressed = false;
     private static int dTasteCycleCounter = 0;
+    private static int tickCounter = 0; // Neuer Zähler für Ticks
 
 
     public static void executeAndromedaBridging(MinecraftClient client, int durationInSeconds) {
         BridgingModClient.andromedaBridgingEnabled = true;
         remainingTicks = durationInSeconds * TICKS_PER_SECOND;
 
-        isFacingChanged = true;
-        isSTastePressed = true; // S-Taste wird gedrückt, sobald Andromeda-Bridging aktiviert wird
-        dTasteTickCounter = 0;
+        // Initialisieren der Tastenstatus
+        isSTastePressed = true;
+        isDTastePressed = true; // Initialisieren, dass D-Taste gedrückt ist
+        dTasteCycleCounter = 0; // Start des Zyklus für D-Taste
+
+        // Sofortiges Drücken von S und D
+        //KeyboardInputHandler.getInstance().pressKey('S');
+        //KeyboardInputHandler.getInstance().pressKey('D');
     }
 
     public static void update() {
@@ -41,62 +44,28 @@ public class AndromedaBridgingHandler {
         PlayerEntity player = mc.player;
 
         if (BridgingModClient.andromedaBridgingEnabled) {
-            //if (isRightClickNeeded) {
-                //performRightClick();
-                //isRightClickNeeded = false; // Rechtsklick wurde durchgeführt, also zurücksetzen
-            //}
 
-            //if (isFacingChanged) {
-                // Warten für 2 Ticks (100 Millisekunden) nach jedem Blickwinkelwechsel, bevor der Rechtsklick durchgeführt wird
-                //if (remainingTicks % (TICKS_PER_SECOND / 20) == 0) {
-                    //isRightClickNeeded = true; // Rechtsklick soll durchgeführt werden
-                    //isFacingChanged = false; // Blickwinkel wurde geändert, also zurücksetzen
-                //}
-            //}
-
-            if (remainingTicks % 1 == 0) {
-                performRightClick();
+            switch (tickCounter % 3) { // Wiederholung alle 3 Ticks
+                case 0:
+                    setPlayerFacing(player, -142.6F, 79.3F); // 1. Tick
+                    break;
+                case 1:
+                    setPlayerFacing(player, -146.5F, -62.3F); // 2. Tick
+                    break;
+                case 2:
+                    setPlayerFacing(player, 1.5F, -7.1F); // 3. Tick
+                    KeyboardInputHandler.getInstance().pressKey('W'); // W-Taste drücken
+                    KeyboardInputHandler.getInstance().releaseKey('W'); // W-Taste drücken
+                    break;
             }
 
-            if (remainingTicks % 1 == 0) { // Wechselt die Blickrichtung bei jedem Tick
-                if (toggleDirection) {
-                    player.setYaw(-142.6F);
-                    player.setPitch(79.3F);
-                } else {
-                    //player.setYaw(-146.5F);
-                    //player.setPitch(-62.3F);
-                }
-                toggleDirection = !toggleDirection; // Umschalten der Richtung
-            }
-
-
-                // D-Taste-Zyklus
-                if (dTasteCycleCounter < 20) { // 800 Millisekunden gedrückt halten
-                    if (!isDTastePressed) {
-                        KeyboardInputHandler.getInstance().pressKey('D');
-                        isDTastePressed = true;
-                    }
-                } else if (dTasteCycleCounter < 24) { // 400 Millisekunden loslassen
-                    if (isDTastePressed) {
-                        KeyboardInputHandler.getInstance().releaseKey('D');
-                        isDTastePressed = false;
-                    }
-                }
-
-                dTasteCycleCounter++;
-                if (dTasteCycleCounter >= 24) {
-                    dTasteCycleCounter = 0; // Zyklus zurücksetzen
-                }
-
-            // S-Taste bei jedem Tick drücken
-            KeyboardInputHandler.getInstance().pressKey('S');
-
-            // D-Taste-Zyklus
-            handleDTasteCycle();
+            tickCounter++;
+            if (tickCounter >= 3) tickCounter = 0; // Zurücksetzen des Zählers
 
             remainingTicks--;
             if (remainingTicks <= 0) {
                 endAndromedaBridging();
+                tickCounter = 0; // Zähler zurücksetzen beim Beenden
             }
         }
     }
@@ -132,13 +101,20 @@ public class AndromedaBridgingHandler {
     }
 
     private static void endAndromedaBridging() {
-        KeyboardInputHandler.getInstance().releaseKey('S');
-        KeyboardInputHandler.getInstance().pressKey('D');
-        KeyboardInputHandler.getInstance().releaseKey('D');
-        AndromedaBridgingHandler.isSTastePressed = false;
+        if (isDTastePressed) {
+            KeyboardInputHandler.getInstance().releaseKey('D');
+        }
+        isSTastePressed = false;
+        isDTastePressed = false;
         BridgingModClient.andromedaBridgingEnabled = false;
 
         // Zusätzliche Aktionen, wenn notwendig, um den Modus ordnungsgemäß zu beenden
+    }
+
+    private static void setPlayerFacing(PlayerEntity player, float yaw, float pitch) {
+        player.setYaw(yaw);
+        player.setPitch(pitch);
+        performRightClick(); // Rechtsklick ausführen
     }
 
 }
