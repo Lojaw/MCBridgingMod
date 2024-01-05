@@ -69,8 +69,6 @@ public class AndromedaBridgingHandler {
                 toggleDirection = !toggleDirection; // Umschalten der Richtung
             }
 
-                // S-Taste bei jedem Tick drücken
-                KeyboardInputHandler.getInstance().pressKey('S');
 
                 // D-Taste-Zyklus
                 if (dTasteCycleCounter < 20) { // 800 Millisekunden gedrückt halten
@@ -90,13 +88,15 @@ public class AndromedaBridgingHandler {
                     dTasteCycleCounter = 0; // Zyklus zurücksetzen
                 }
 
+            // S-Taste bei jedem Tick drücken
+            KeyboardInputHandler.getInstance().pressKey('S');
 
+            // D-Taste-Zyklus
+            handleDTasteCycle();
 
             remainingTicks--;
             if (remainingTicks <= 0) {
-                KeyboardInputHandler.getInstance().releaseKey('S');
-                AndromedaBridgingHandler.isSTastePressed = false;
-                BridgingModClient.andromedaBridgingEnabled = false;
+                endAndromedaBridging();
             }
         }
     }
@@ -110,6 +110,35 @@ public class AndromedaBridgingHandler {
         } catch (AWTException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void handleDTasteCycle() {
+        if (dTasteCycleCounter < 20) { // 800 Millisekunden gedrückt halten
+            if (!isDTastePressed) {
+                KeyboardInputHandler.getInstance().pressKey('D');
+                isDTastePressed = true;
+            }
+        } else if (dTasteCycleCounter < 24) { // 400 Millisekunden loslassen
+            if (isDTastePressed) {
+                KeyboardInputHandler.getInstance().releaseKey('D');
+                isDTastePressed = false;
+            }
+        }
+
+        dTasteCycleCounter++;
+        if (dTasteCycleCounter >= 24) {
+            dTasteCycleCounter = 0; // Zyklus zurücksetzen
+        }
+    }
+
+    private static void endAndromedaBridging() {
+        KeyboardInputHandler.getInstance().releaseKey('S');
+        KeyboardInputHandler.getInstance().pressKey('D');
+        KeyboardInputHandler.getInstance().releaseKey('D');
+        AndromedaBridgingHandler.isSTastePressed = false;
+        BridgingModClient.andromedaBridgingEnabled = false;
+
+        // Zusätzliche Aktionen, wenn notwendig, um den Modus ordnungsgemäß zu beenden
     }
 
 }
