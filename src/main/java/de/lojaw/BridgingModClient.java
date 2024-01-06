@@ -81,8 +81,8 @@ public class BridgingModClient implements ClientModInitializer {
                             // Überprüfe, ob die richtige Anzahl von Argumenten vorhanden ist
                             if(args.length >= 2) {
                                 try {
-                                    // Versuche, das Argument in einen Integer umzuwandeln
-                                    int durationInSeconds = Integer.parseInt(args[1]);
+                                    // Versuche, das Argument in einen Double umzuwandeln
+                                    double durationInSeconds = Double.parseDouble(args[1]);
 
                                     // Überprüfe, ob die Dauer positiv ist
                                     if(durationInSeconds > 0) {
