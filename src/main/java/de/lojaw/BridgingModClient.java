@@ -78,9 +78,26 @@ public class BridgingModClient implements ClientModInitializer {
 
                     case "derpbridge":
                         if(player != null) {
-                            // Rufen Sie hier die execute-Methode von Quarterderpbridging auf
-                            // Zum Beispiel mit einer festen Dauer von 10 Sekunden
-                            Derpbridging.executeDerpbridgingBridging(MinecraftClient.getInstance(), 1.05);
+                            // Überprüfe, ob die richtige Anzahl von Argumenten vorhanden ist
+                            if(args.length >= 2) {
+                                try {
+                                    // Versuche, das Argument in einen Integer umzuwandeln
+                                    int durationInSeconds = Integer.parseInt(args[1]);
+
+                                    // Überprüfe, ob die Dauer positiv ist
+                                    if(durationInSeconds > 0) {
+                                        Derpbridging.executeDerpbridgingBridging(MinecraftClient.getInstance(), durationInSeconds);
+                                    } else {
+                                        player.sendMessage(Text.of("[YourMod] Der Wert für 'durationInSeconds' muss positiv sein."), false);
+                                    }
+                                } catch (NumberFormatException e) {
+                                    // Fange die Ausnahme ab, falls das Argument keine gültige Zahl ist
+                                    player.sendMessage(Text.of("[YourMod] 'durationInSeconds' muss eine gültige Zahl sein."), false);
+                                }
+                            } else {
+                                // Informiere den Spieler, wenn nicht genügend Argumente vorhanden sind
+                                player.sendMessage(Text.of("[YourMod] Der Befehl 'derpbridge' erfordert einen Parameter: <durationInSeconds>."), false);
+                            }
                         }
                         return false;
 
