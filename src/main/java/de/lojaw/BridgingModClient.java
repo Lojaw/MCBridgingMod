@@ -1,6 +1,8 @@
 package de.lojaw;
 
 import de.lojaw.bridgingmethods.AndromedaBridgingHandler;
+import de.lojaw.bridgingmethods.Derpbridging;
+import de.lojaw.bridgingmethods.Quarterderpbridging;
 import de.lojaw.jni.KeyboardInputHandler;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -9,6 +11,9 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.AWTException;
 import java.awt.Robot;
 import java.awt.event.InputEvent;
@@ -19,7 +24,9 @@ import java.util.TimerTask;
 
 public class BridgingModClient implements ClientModInitializer {
 
-    public static boolean andromedaBridgingEnabled = true;
+    public static boolean andromedaBridgingEnabled = false;
+    public static boolean derpbridgingEnabled = false;
+    private static int rightClickDurationTicks = 0;
 
     public enum MouseButtonType {
         LEFT_CLICK,
@@ -61,11 +68,75 @@ public class BridgingModClient implements ClientModInitializer {
                         }
                         return false;
 
+                    case "quarterderp":
+                        if(player != null) {
+                            // Rufen Sie hier die execute-Methode von Quarterderpbridging auf
+                            // Zum Beispiel mit einer festen Dauer von 10 Sekunden
+                            Quarterderpbridging.executeQuarterderpbridging(player, 5);
+                        }
+                        return false;
+
+                    case "derpbridge":
+                        if(player != null) {
+                            // Rufen Sie hier die execute-Methode von Quarterderpbridging auf
+                            // Zum Beispiel mit einer festen Dauer von 10 Sekunden
+                            Derpbridging.executeDerpbridgingBridging(MinecraftClient.getInstance(), 1.05);
+                        }
+                        return false;
+
+                    case "rightclick":
+                        if(args.length >= 2) {
+                            int durationInSeconds = Integer.parseInt(args[1]);
+                            rightClickDurationTicks = durationInSeconds * 20;
+                        } else {
+                            if (player != null) {
+                                player.sendMessage(Text.of("[YourMod] Der Befehl 'rightclick' erfordert einen Parameter: <durationInSeconds>."), false);
+                            }
+                        }
+                        return false;
+
+                    case "getcoords":
+                        if (player != null) {
+                            float yaw = player.getYaw();
+                            float pitch = player.getPitch();
+                            String coords = yaw + " " + pitch;
+
+                            // Kopieren in die Zwischenablage
+                            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                            StringSelection stringSelection = new StringSelection(coords);
+                            clipboard.setContents(stringSelection, null);
+
+                            player.sendMessage(Text.of("[YourMod] Koordinaten kopiert: " + coords), false);
+                        }
+                        return false;
+
+                    case "getcoords2":
+                        if (player != null) {
+                            // Extrahiere die Koordinaten und Ausrichtung des Spielers
+                            double x = player.getX();
+                            double y = player.getY();
+                            double z = player.getZ();
+                            float yaw = player.getYaw();
+                            float pitch = player.getPitch();
+
+                            // Erstelle die Nachricht mit den Koordinaten und der Ausrichtung
+                            String coordsMessage = String.format("X=%.2f, Y=%.2f, Z=%.2f, Yaw=%.2f, Pitch=%.2f", x, y, z, yaw, pitch);
+
+                            // Kopiere die Nachricht in die Zwischenablage
+                            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                            StringSelection stringSelection = new StringSelection(coordsMessage);
+                            clipboard.setContents(stringSelection, null);
+
+                            // Sende die Nachricht an den Spieler
+                            player.sendMessage(Text.of("[YourMod] Koordinaten kopiert: " + coordsMessage), false);
+                        }
+                        return false;
+
                     default:
                         if (player != null) {
                             player.sendMessage(Text.of("[YourMod] Unbekannter Befehl."), false);
                         }
-                        return false;
+                        return true;
                 }
             } else {
                 // Liste von Befehlen senden
@@ -73,7 +144,7 @@ public class BridgingModClient implements ClientModInitializer {
                     player.sendMessage(Text.of("[YourMod] Liste der verfügbaren Befehle:"), false);
                     // TODO: Liste der verfügbaren Befehle
                 }
-                return false;
+                return true;
             }
         });
 
@@ -81,8 +152,15 @@ public class BridgingModClient implements ClientModInitializer {
             MinecraftClient mc = MinecraftClient.getInstance();
             PlayerEntity player = mc.player;
             if(player != null) {
-                AndromedaBridgingHandler.update(); // Aufruf der Update-Methode pro Tick
+                //AndromedaBridgingHandler.update(); // Aufruf der Update-Methode pro Tick
+                //Quarterderpbridging.update(player);
+                Derpbridging.update();
             }
+
+            //if(rightClickDurationTicks > 0) {
+                //AndromedaBridgingHandler.performRightClick();
+                //rightClickDurationTicks--;
+            //}
         });
     }
 }

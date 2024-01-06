@@ -23,6 +23,9 @@ public class AndromedaBridgingHandler {
     private static boolean isDTastePressed = false;
     private static int dTasteCycleCounter = 0;
     private static int tickCounter = 0; // Neuer Zähler für Ticks
+    private static int wTasteTickCounter = 0;
+    private static boolean isWTastePressed = false;
+    private static final int W_TASTE_TICKS = 60; // Anzahl der Ticks, die die W-Taste gedrückt gehalten wird
 
 
     public static void executeAndromedaBridging(MinecraftClient client, int durationInSeconds) {
@@ -45,17 +48,21 @@ public class AndromedaBridgingHandler {
 
         if (BridgingModClient.andromedaBridgingEnabled) {
 
-            switch (tickCounter % 3) { // Wiederholung alle 3 Ticks
+            switch (tickCounter % 3) {
                 case 0:
-                    setPlayerFacing(player, -142.6F, 79.3F); // 1. Tick
+                    if (isWTastePressed) {
+                        //KeyboardInputHandler.getInstance().releaseKey('W'); // W-Taste loslassen
+                        isWTastePressed = false;
+                    }
+                    //setPlayerFacing(player, -142.6F, 79.3F); // 1. Tick
                     break;
                 case 1:
-                    setPlayerFacing(player, -146.5F, -62.3F); // 2. Tick
+                    //setPlayerFacing(player, -146.5F, -62.3F); // 2. Tick
                     break;
                 case 2:
                     setPlayerFacing(player, 1.5F, -7.1F); // 3. Tick
                     KeyboardInputHandler.getInstance().pressKey('W'); // W-Taste drücken
-                    KeyboardInputHandler.getInstance().releaseKey('W'); // W-Taste drücken
+                    isWTastePressed = true;
                     break;
             }
 
@@ -70,7 +77,7 @@ public class AndromedaBridgingHandler {
         }
     }
 
-    private static void performRightClick() {
+    public static void performRightClick() {
         Robot robot;
         try {
             robot = new Robot();
@@ -104,6 +111,13 @@ public class AndromedaBridgingHandler {
         if (isDTastePressed) {
             KeyboardInputHandler.getInstance().releaseKey('D');
         }
+
+        KeyboardInputHandler.getInstance().releaseKey('W');
+        if (wTasteTickCounter > 0) {
+            KeyboardInputHandler.getInstance().releaseKey('W'); // Stellen Sie sicher, dass die W-Taste freigegeben wird
+            wTasteTickCounter = 0; // Setzen Sie den Zähler zurück, um weiteres Drücken zu verhindern
+        }
+
         isSTastePressed = false;
         isDTastePressed = false;
         BridgingModClient.andromedaBridgingEnabled = false;

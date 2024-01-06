@@ -9,7 +9,7 @@ import java.awt.event.KeyEvent;
 public class DebugHelper {
     public static void debugPlayerEntityMixin(boolean andromedaBridgingEnabled, CallbackInfoReturnable<Boolean> cir) {
 
-        if (BridgingModClient.andromedaBridgingEnabled) {
+        if (BridgingModClient.andromedaBridgingEnabled || BridgingModClient.derpbridgingEnabled) {
             cir.setReturnValue(true);
             cir.cancel(); // Beendet die Methode frühzeitig mit dem angegebenen Rückgabewert
         }
@@ -19,7 +19,7 @@ public class DebugHelper {
     public static void debugSprintMixin(ClientPlayerEntity player, boolean andromedaBridgingEnabled) {
         //System.out.println("SPRINT MIXIN LOADED");
 
-        if(andromedaBridgingEnabled) {
+        if(andromedaBridgingEnabled || BridgingModClient.derpbridgingEnabled) {
             if (player.isOnGround()) {
                 //player.jump();
             }
