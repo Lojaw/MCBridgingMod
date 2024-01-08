@@ -1,21 +1,30 @@
 package de.lojaw;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.lojaw.bridgingmethods.AndromedaBridgingHandler;
 import de.lojaw.bridgingmethods.Derpbridging;
 import de.lojaw.bridgingmethods.Quarterderpbridging;
 import de.lojaw.jni.KeyboardInputHandler;
+import de.lojaw.jni.NativeOverlayRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.render.*;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import java.awt.Toolkit;
+import net.minecraft.text.TextColor;
+import net.minecraft.util.math.Vec3d;
+import org.joml.Matrix4f;
+
+import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.awt.AWTException;
-import java.awt.Robot;
 import java.awt.event.InputEvent;
 
 import java.awt.event.KeyEvent;
@@ -27,6 +36,12 @@ public class BridgingModClient implements ClientModInitializer {
     public static boolean andromedaBridgingEnabled = false;
     public static boolean derpbridgingEnabled = false;
     private static int rightClickDurationTicks = 0;
+    //
+    private static Vec3d previousPosition = Vec3d.ZERO;
+    private static long lastUpdateTime = 0;
+    private static String speedText = "0.00 blocks/s";
+    private static int tickCounter = 0;
+    //
 
     public enum MouseButtonType {
         LEFT_CLICK,
@@ -36,6 +51,7 @@ public class BridgingModClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         System.setProperty("java.awt.headless", "false");
+        //HudRenderCallback.EVENT.register(this::renderMyText);
 
         ClientSendMessageEvents.ALLOW_CHAT.register((message) -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
@@ -112,8 +128,14 @@ public class BridgingModClient implements ClientModInitializer {
                         }
                         return false;
 
+                    case "pressw":
+                        KeyboardInputHandler keyboardInputHandler = new KeyboardInputHandler();
+                        keyboardInputHandler.pressKey('W');
+                        return false;
+
                     case "getcoords":
                         if (player != null) {
+                            NativeOverlayRenderer.renderOverlay();
                             float yaw = player.getYaw();
                             float pitch = player.getPitch();
                             String coords = yaw + " " + pitch;
@@ -129,6 +151,7 @@ public class BridgingModClient implements ClientModInitializer {
 
                     case "getcoords2":
                         if (player != null) {
+                            NativeOverlayRenderer.renderOverlay();
                             // Extrahiere die Koordinaten und Ausrichtung des Spielers
                             double x = player.getX();
                             double y = player.getY();
@@ -168,10 +191,17 @@ public class BridgingModClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             MinecraftClient mc = MinecraftClient.getInstance();
             PlayerEntity player = mc.player;
+
             if(player != null) {
                 //AndromedaBridgingHandler.update(); // Aufruf der Update-Methode pro Tick
                 //Quarterderpbridging.update(player);
                 Derpbridging.update();
+            }
+
+            tickCounter++;
+            if (tickCounter >= 20) {
+                updateSpeedAnzeige(client);
+                tickCounter = 0;
             }
 
             //if(rightClickDurationTicks > 0) {
@@ -180,4 +210,32 @@ public class BridgingModClient implements ClientModInitializer {
             //}
         });
     }
+
+    private static void updateSpeedAnzeige(MinecraftClient mc) {
+        PlayerEntity player = mc.player;
+        if (player != null) {
+            assert mc.world != null;
+            long currentTime = mc.world.getTime(); // Verwendung von world.getTime()
+            if (lastUpdateTime != 0) {
+                Vec3d currentPosition = player.getPos();
+                double distance = currentPosition.distanceTo(previousPosition);
+                long timeElapsed = currentTime - lastUpdateTime; // Zeit in Ticks
+
+                // Umrechnung von Ticks in Sekunden (1 Tick = 1/20 Sekunde)
+                float timeInSeconds = timeElapsed / 20.0f;
+
+                // Geschwindigkeit in Blöcken pro Sekunde
+                float speed = (float) (distance / timeInSeconds);
+                speedText = String.format("%.2f blocks/s", speed);
+            }
+
+            previousPosition = player.getPos();
+            lastUpdateTime = currentTime;
+        }
+    }
+
+    public static String getSpeedText() {
+        return speedText;
+    }
+
 }
