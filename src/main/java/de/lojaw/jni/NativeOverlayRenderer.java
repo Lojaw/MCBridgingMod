@@ -15,4 +15,6 @@ public class NativeOverlayRenderer {
     public static native void initOverlay(); // Native Methode für das Rendering
     public static native void renderOverlay();
     public static native void destroyOverlay();
+    public static native byte[] getTextImage(); // Neue Methode, um das Bild zu erhalten
+    public static native void renderMinecraftOverlay(); // Neue Methode, um den Minecraft-Overlay-Code auszuführen
 }

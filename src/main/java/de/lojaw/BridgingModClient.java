@@ -21,6 +21,7 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
@@ -135,6 +136,9 @@ public class BridgingModClient implements ClientModInitializer {
 
                     case "getcoords":
                         if (player != null) {
+                            // Ausgeben der OpenGL-Version
+                            String glVersion = GL11.glGetString(GL11.GL_VERSION);
+                            System.out.println("Aktuelle OpenGL-Version: " + glVersion);
                             NativeOverlayRenderer.renderOverlay();
                             float yaw = player.getYaw();
                             float pitch = player.getPitch();
@@ -211,7 +215,7 @@ public class BridgingModClient implements ClientModInitializer {
         });
     }
 
-    private static void updateSpeedAnzeige(MinecraftClient mc) {
+    public static void updateSpeedAnzeige(MinecraftClient mc) {
         PlayerEntity player = mc.player;
         if (player != null) {
             assert mc.world != null;
